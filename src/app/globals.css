@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* ----------------------------------------------------------------
+   Trustmailtoday design system — trust blue + emerald green + dark slate
+   primary green #22c55e (CTA) · accent hover #16a34a · trust blue #0a64bc
+   darkBG #0f172a · surface #111827 · muted text #cbd5e1
+-----------------------------------------------------------------*/
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-poppins), var(--font-inter), sans-serif;
+
+  /* brand — emerald green (CTAs, success, deliverability) */
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #4ade80;
+  --color-brand-500: #22c55e; /* primary green / CTA */
+  --color-brand-600: #16a34a; /* accent hover / border green */
+  --color-brand-700: #15803d;
+
+  /* trust blue — logo mark + secondary trust accents */
+  --color-trust-400: #3b82f6;
+  --color-trust-500: #0a64bc; /* primary blue */
+  --color-trust-600: #0850a0;
+
+  /* dark slate surfaces */
+  --color-darkbg: #0f172a;      /* page background */
+  --color-surface: #111827;     /* cards / panels */
+  --color-surface-2: #1e293b;   /* hover / inputs */
+  --color-hairline: #243044;    /* borders */
+  --color-muted: #cbd5e1;       /* muted text */
+  --color-accent-teal: #0a64bc; /* legacy alias → trust blue */
+  --color-highlight: #4ade80;   /* legacy alias → green-400 */
+
+  --shadow-card: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset,
+    0 12px 40px -12px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 0 1px rgba(34, 197, 94, 0.15),
+    0 8px 40px -8px rgba(34, 197, 94, 0.25);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  /* single source of truth for navbar height — hero spacing keys off this */
+  --nav-h: 64px;
+  scroll-padding-top: calc(var(--nav-h) + 16px);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+/* spacer so fixed navbar never overlaps the first section */
+.pt-nav {
+  padding-top: calc(var(--nav-h) + 56px);
+}
+@media (min-width: 640px) {
+  .pt-nav {
+    padding-top: calc(var(--nav-h) + 72px);
+  }
+}
+@media (min-width: 1024px) {
+  .pt-nav {
+    padding-top: calc(var(--nav-h) + 88px);
+  }
+}
+
+/* ---- green glass navbar (zerogpu-style) ---- */
+.glass-nav {
+  background: linear-gradient(
+    180deg,
+    rgba(34, 197, 94, 0.06) 0%,
+    rgba(15, 23, 42, 0.55) 100%
+  );
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.18);
+  box-shadow: 0 8px 30px -12px rgba(34, 197, 94, 0.25),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+.glass-nav--top {
+  background: linear-gradient(
+    180deg,
+    rgba(34, 197, 94, 0.05) 0%,
+    rgba(15, 23, 42, 0.18) 100%
+  );
+  -webkit-backdrop-filter: blur(8px) saturate(130%);
+  backdrop-filter: blur(8px) saturate(130%);
+  border-bottom: 1px solid rgba(34, 197, 94, 0.08);
+  box-shadow: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* green gradient helpers */
+.bg-brand-gradient {
+  background-image: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+}
+.text-brand-gradient,
+.text-grad-green {
+  background-image: linear-gradient(90deg, #4ade80, #22c55e 60%, #16a34a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.text-green-accent {
+  color: #22c55e;
+}
+
+/* dotted radial background (landing base) */
+.bg-dotted {
+  background-color: #0f172a;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: -11px -11px;
+}
+
+/* soft radial glow blobs (absolutely-positioned divs) */
+.glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+.glow--green {
+  background: #22c55e;
+}
+.glow--teal {
+  background: #0a64bc;
+}
+.glow--bottom-right {
+  right: -120px;
+  bottom: -120px;
+  width: 420px;
+  height: 420px;
+}
+.glow--top-left {
+  left: -140px;
+  top: -100px;
+  width: 380px;
+  height: 380px;
+}
+
+/* hairline card with hover green ring */
+.card-ring {
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-hairline);
+}
+.card-ring:hover {
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+/* subtle floating animation for hero visuals */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+::selection {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+/* reduced-motion fallback */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .glow {
+    opacity: 0.35;
+  }
+}
