@@ -16,6 +16,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://trustmailtoday.com"),
   title: "Trustmailtoday — Keep Your Emails Out of Spam",
   description:
     "AI-powered email warmup that builds real sender reputation so your emails land in the inbox, not the spam folder. From ₹200/month.",
@@ -26,6 +27,20 @@ export const metadata = {
     "cold email deliverability",
     "SPF DKIM DMARC",
   ],
+  openGraph: {
+    type: "website",
+    siteName: "Trustmailtoday",
+    title: "Trustmailtoday — Keep Your Emails Out of Spam",
+    description:
+      "AI-powered email warmup that builds real sender reputation so your emails land in the inbox, not the spam folder.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Trustmailtoday — Keep Your Emails Out of Spam",
+    description:
+      "AI-powered email warmup that builds real sender reputation so your emails land in the inbox, not the spam folder.",
+  },
 };
 
 export default function RootLayout({ children }) {
