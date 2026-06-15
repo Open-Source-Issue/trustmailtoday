@@ -29,8 +29,8 @@ const plans = [
     period: "/month",
     tagline: "For growing senders",
     features: [
-      "Unlimited warmup emails",
-      "1 connected inbox",
+      "Everything in Free, plus:",
+      "Unlimited warmup emails (no daily cap)",
       "Live reputation tracking",
       "Auto warmup ramp-up",
       "Email support",
@@ -114,12 +114,15 @@ export default function Pricing() {
           transition={{ duration: 0.6 }}
           className="mx-auto max-w-2xl text-center"
         >
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-[#22c55e]">
+            Pricing
+          </p>
           <h2 className="text-3xl font-bold text-white sm:text-4xl">
             Simple, <span className="text-green-accent">honest pricing</span>
           </h2>
           <p className="mt-4 text-[#CBD5E1]">
-            The lowest price in the market, built for Indian startups. Cancel
-            anytime.
+            Startup-friendly pricing built for Indian senders. Start free, no
+            card required — upgrade or cancel anytime.
           </p>
           {notice && (
             <p

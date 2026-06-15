@@ -7,8 +7,10 @@ import Image from "next/image";
 
 const links = [
   { label: "Home", href: "#home" },
+  { label: "How it works", href: "#how" },
   { label: "Features", href: "#features" },
   { label: "Pricing", href: "#pricing" },
+  { label: "FAQ", href: "#faq" },
 ];
 
 export default function Navbar() {
@@ -17,10 +19,13 @@ export default function Navbar() {
 
   const handleSmoothScroll = (e, href) => {
     if (href.startsWith("#")) {
-      e.preventDefault();
       const element = document.querySelector(href);
+      e.preventDefault();
       if (element) {
         element.scrollIntoView({ behavior: "smooth" });
+      } else {
+        // Section isn't on the current page (e.g. a legal page) — go home.
+        window.location.href = `/${href}`;
       }
     }
     setOpen(false);
@@ -61,7 +66,7 @@ export default function Navbar() {
               key={l.href}
               href={l.href}
               onClick={(e) => handleSmoothScroll(e, l.href)}
-              className="text-sm font-medium text-[#8aa0b2] transition-colors hover:text-white cursor-pointer"
+              className="text-sm font-medium text-[#cbd5e1] transition-colors hover:text-white cursor-pointer"
             >
               {l.label}
             </a>
@@ -97,7 +102,7 @@ export default function Navbar() {
               key={l.href}
               href={l.href}
               onClick={(e) => handleSmoothScroll(e, l.href)}
-              className="block rounded-lg px-3 py-2.5 text-sm font-medium text-[#8aa0b2] hover:bg-[#131d2a] hover:text-white cursor-pointer"
+              className="block rounded-lg px-3 py-2.5 text-sm font-medium text-[#cbd5e1] hover:bg-[#131d2a] hover:text-white cursor-pointer"
             >
               {l.label}
             </a>
