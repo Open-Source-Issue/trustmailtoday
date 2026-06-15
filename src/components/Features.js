@@ -90,6 +90,9 @@ export default function Features() {
           transition={{ duration: 0.6 }}
           className="mx-auto max-w-2xl text-center"
         >
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-[#22c55e]">
+            Features
+          </p>
           <h2 className="text-3xl font-bold text-white sm:text-4xl">
             Everything you need to{" "}
             <span className="text-green-accent">reach the inbox</span>

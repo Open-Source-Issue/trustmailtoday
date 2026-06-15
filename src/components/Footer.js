@@ -1,16 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Shield, Send, Globe, MessageCircle, Mail } from "lucide-react";
+import { Globe, Mail } from "lucide-react";
 import Image from "next/image";
 
 const columns = [
   {
     title: "Product",
     links: [
-      { label: "Home", href: "#home" },
-      { label: "Features", href: "#features" },
-      { label: "Pricing", href: "#pricing" },
+      { label: "Home", href: "/#home" },
+      { label: "How it works", href: "/#how" },
+      { label: "Features", href: "/#features" },
+      { label: "Pricing", href: "/#pricing" },
+      { label: "FAQ", href: "/#faq" },
     ],
   },
   {
@@ -18,7 +20,7 @@ const columns = [
     links: [
       { label: "About", href: "#" },
       { label: "Blog", href: "#" },
-      { label: "Contact", href: "#" },
+      { label: "Contact", href: "mailto:support@trustmailtoday.com" },
     ],
   },
   {
@@ -32,18 +34,18 @@ const columns = [
   {
     title: "Legal",
     links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
-      { label: "Acceptable Use", href: "#" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Acceptable Use", href: "/acceptable-use" },
     ],
   },
 ];
 
+// Only render socials we can actually stand behind. Add Twitter/X, LinkedIn,
+// etc. here with real URLs once those profiles exist.
 const socials = [
-  { icon: Send, href: "#", label: "Twitter / X" },
-  { icon: Globe, href: "#", label: "Website" },
-  { icon: MessageCircle, href: "#", label: "Community" },
-  { icon: Mail, href: "#", label: "Email" },
+  { icon: Globe, href: "/", label: "Website" },
+  { icon: Mail, href: "mailto:support@trustmailtoday.com", label: "Email" },
 ];
 
 export default function Footer() {

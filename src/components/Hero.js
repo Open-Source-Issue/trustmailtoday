@@ -1,14 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Inbox, ShieldCheck, Star, Users } from "lucide-react";
+import { Inbox, ShieldCheck, TrendingUp, ArrowDown } from "lucide-react";
 import ConnectInboxForm from "./ConnectInboxForm";
 import { heroHeading, fadeUpStagger } from "@/lib/motion";
 
 const stats = [
-  { icon: Inbox, value: "90%", label: "Inbox placement" },
-  { icon: Users, value: "50K+", label: "Inboxes warmed" },
-  { icon: Star, value: "4.9★", label: "Avg. rating" },
+  { icon: ShieldCheck, value: "OAuth 2.0", label: "No passwords, ever" },
+  { icon: TrendingUp, value: "Gradual ramp", label: "Safe, organic volume" },
+  { icon: Inbox, value: "3 providers", label: "Gmail · Outlook · Yahoo" },
 ];
 
 export default function Hero() {
@@ -47,10 +47,19 @@ export default function Hero() {
             tracking — built on legitimate deliverability, not spam-filter tricks.
           </motion.p>
 
+          <motion.a
+            variants={fadeUpStagger}
+            custom={2}
+            href="#how"
+            className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-[#22c55e] underline-offset-4 transition hover:text-[#4ADE80] hover:underline"
+          >
+            See how it works <ArrowDown className="h-4 w-4" />
+          </motion.a>
+
           {/* Stats */}
           <motion.div
             variants={fadeUpStagger}
-            custom={2}
+            custom={3}
             className="mt-10 grid max-w-md grid-cols-3 gap-4"
           >
             {stats.map((s) => (
@@ -59,8 +68,8 @@ export default function Hero() {
                 className="rounded-xl border border-[#243044] bg-[#111827] p-4"
               >
                 <s.icon className="mb-1 h-5 w-5 text-[#22c55e]" />
-                <div className="text-2xl font-bold text-white">{s.value}</div>
-                <div className="text-xs text-[#CBD5E1]">{s.label}</div>
+                <div className="text-base font-bold leading-tight text-white sm:text-lg">{s.value}</div>
+                <div className="mt-0.5 text-xs text-[#CBD5E1]">{s.label}</div>
               </div>
             ))}
           </motion.div>
@@ -72,7 +81,7 @@ export default function Hero() {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="hidden w-full max-w-md rounded-2xl border border-[#243044] bg-[#111827]/60 p-4 backdrop-blur sm:block"
+            className="block w-full max-w-md rounded-2xl border border-[#243044] bg-[#111827]/60 p-4 backdrop-blur"
           >
             <div className="animate-float card-ring rounded-xl bg-[#111827] p-4">
               <div className="mb-3 flex items-center gap-2 border-b border-[#243044] pb-3">
@@ -91,7 +100,9 @@ export default function Hero() {
               ].map((t, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-[#1E293B]"
+                  className={`${
+                    i > 0 ? "hidden sm:flex" : "flex"
+                  } items-center gap-3 rounded-lg px-2 py-2.5 hover:bg-[#1E293B]`}
                 >
                   <span className="h-8 w-8 shrink-0 rounded-full bg-brand-gradient" />
                   <div className="min-w-0">
