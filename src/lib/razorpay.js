@@ -56,6 +56,25 @@ export function verifySubscriptionSignature({
   return timingSafeEqualHex(expected, razorpay_signature);
 }
 
+/**
+ * Verify the signature returned by Checkout after a one-time payment.
+ * Razorpay signs `order_id|payment_id` with the key secret.
+ */
+export function verifyPaymentSignature({
+  razorpay_order_id,
+  razorpay_payment_id,
+  razorpay_signature,
+}) {
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return false;
+  }
+  const expected = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest("hex");
+  return timingSafeEqualHex(expected, razorpay_signature);
+}
+
 /** Verify a webhook payload against the X-Razorpay-Signature header. */
 export function verifyWebhookSignature(rawBody, signature) {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
