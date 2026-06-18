@@ -8,7 +8,7 @@ import { heroHeading, fadeUpStagger } from "@/lib/motion";
 const stats = [
   { icon: ShieldCheck, value: "OAuth 2.0", label: "No passwords, ever" },
   { icon: TrendingUp, value: "Gradual ramp", label: "Safe, organic volume" },
-  { icon: Inbox, value: "3 providers", label: "Gmail · Outlook · Yahoo" },
+  { icon: Inbox, value: "Gmail & Workspace", label: "Outlook & Yahoo coming soon" },
 ];
 
 export default function Hero() {

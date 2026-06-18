@@ -10,25 +10,28 @@ const columns = [
     links: [
       { label: "Home", href: "/#home" },
       { label: "How it works", href: "/#how" },
-      { label: "Features", href: "/#features" },
-      { label: "Pricing", href: "/#pricing" },
+      { label: "Features", href: "/features" },
+      { label: "Pricing", href: "/pricing" },
       { label: "FAQ", href: "/#faq" },
     ],
   },
   {
     title: "Company",
     links: [
-      { label: "About", href: "#" },
-      { label: "Blog", href: "#" },
-      { label: "Contact", href: "mailto:support@trustmailtoday.com" },
+      { label: "About", href: "/about-us" },
+      { label: "Blog", href: "/blog" },
+      { label: "Affiliates", href: "/affiliates" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {
-    title: "Resources",
+    title: "Free tools",
     links: [
-      { label: "Docs", href: "#" },
-      { label: "Deliverability guide", href: "#" },
-      { label: "Status", href: "#" },
+      { label: "All tools", href: "/free-email-deliverability-tools" },
+      { label: "SPF checker", href: "/spf-checker" },
+      { label: "DMARC checker", href: "/dmarc-checker" },
+      { label: "Blacklist checker", href: "/blacklist-checker" },
+      { label: "Spam checker", href: "/spam-checker" },
     ],
   },
   {
