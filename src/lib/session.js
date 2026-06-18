@@ -28,8 +28,20 @@ async function collection() {
 
 /* ----------------------------- cookie signing ---------------------------- */
 
+const DEV_SECRET = "dev-insecure-secret-change-me";
+
 function secret() {
-  return process.env.SESSION_SECRET || "dev-insecure-secret-change-me";
+  const s = process.env.SESSION_SECRET;
+  if (!s || s === DEV_SECRET) {
+    // Never run on an insecure/default secret in production.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "SESSION_SECRET must be set to a strong, unique value in production."
+      );
+    }
+    return DEV_SECRET;
+  }
+  return s;
 }
 
 function sign(value) {
@@ -58,10 +70,82 @@ export function unsign(signed) {
 
 /* ------------------------------- operations ------------------------------ */
 
+/* --------------------------- token encryption ---------------------------- *
+ * Long-lived OAuth secrets (refresh/access tokens) are encrypted at rest with
+ * AES-256-GCM. The key is derived from SESSION_SECRET, so no new environment
+ * variable is required. Encrypted values are tagged with ENC_PREFIX so reads
+ * can transparently pass through any older PLAINTEXT tokens during rollout —
+ * nothing breaks for already-connected users.
+ */
+
+const ENC_PREFIX = "enc:v1:";
+
+function encKey() {
+  // 32-byte key for AES-256, derived deterministically from the app secret.
+  return crypto.createHash("sha256").update(secret()).digest();
+}
+
+function encryptSecret(plain) {
+  if (typeof plain !== "string" || plain.length === 0) return plain;
+  if (plain.startsWith(ENC_PREFIX)) return plain; // already encrypted (idempotent)
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", encKey(), iv);
+  const ct = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return (
+    ENC_PREFIX + [iv, tag, ct].map((b) => b.toString("base64url")).join(":")
+  );
+}
+
+function decryptSecret(value) {
+  // Pass through anything that isn't one of our encrypted values (incl. legacy
+  // plaintext tokens), so existing sessions keep working.
+  if (typeof value !== "string" || !value.startsWith(ENC_PREFIX)) return value;
+  try {
+    const [ivB64, tagB64, ctB64] = value.slice(ENC_PREFIX.length).split(":");
+    const iv = Buffer.from(ivB64, "base64url");
+    const tag = Buffer.from(tagB64, "base64url");
+    const ct = Buffer.from(ctB64, "base64url");
+    const decipher = crypto.createDecipheriv("aes-256-gcm", encKey(), iv);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(ct), decipher.final()]).toString(
+      "utf8"
+    );
+  } catch (err) {
+    // Corrupt/key-mismatch: don't crash. The token will be invalid and the
+    // user is prompted to reconnect — far safer than throwing here.
+    console.error("token decrypt failed:", err?.message || err);
+    return value;
+  }
+}
+
+const SECRET_TOKEN_FIELDS = ["refresh_token", "access_token"];
+
+function mapTokenFields(tokens, fn) {
+  if (!tokens || typeof tokens !== "object") return tokens;
+  const out = { ...tokens };
+  for (const field of SECRET_TOKEN_FIELDS) {
+    if (typeof out[field] === "string" && out[field]) out[field] = fn(out[field]);
+  }
+  return out;
+}
+
+const encryptTokens = (tokens) => mapTokenFields(tokens, encryptSecret);
+const decryptTokens = (tokens) => mapTokenFields(tokens, decryptSecret);
+
+/** Return a shallow copy of a session doc with its token secrets decrypted. */
+function withDecryptedTokens(doc) {
+  if (!doc || !doc.tokens) return doc;
+  return { ...doc, tokens: decryptTokens(doc.tokens) };
+}
+
+
 /** Create a session record and return { id, cookieValue }. */
 export async function createSession(data) {
   const id = crypto.randomBytes(18).toString("base64url");
-  const doc = { _id: id, ...data, createdAt: Date.now() };
+  const stored = { ...data };
+  if (stored.tokens) stored.tokens = encryptTokens(stored.tokens);
+  const doc = { _id: id, ...stored, createdAt: Date.now() };
   if (isDbConfigured()) {
     const col = await collection();
     await col.insertOne(doc);
@@ -76,15 +160,16 @@ export async function getSession(signedCookieValue) {
   if (!id) return null;
   if (isDbConfigured()) {
     const col = await collection();
-    return col.findOne({ _id: id });
+    return withDecryptedTokens(await col.findOne({ _id: id }));
   }
-  return memStore.get(id) || null;
+  return withDecryptedTokens(memStore.get(id) || null);
 }
 
 /** Merge `patch` into a session by its raw (unsigned) id. */
 export async function updateSessionById(id, patch) {
   if (!id) return null;
   const update = { ...patch, updatedAt: Date.now() };
+  if (update.tokens) update.tokens = encryptTokens(update.tokens);
   if (isDbConfigured()) {
     const col = await collection();
     const res = await col.findOneAndUpdate(
@@ -92,13 +177,13 @@ export async function updateSessionById(id, patch) {
       { $set: update },
       { returnDocument: "after" }
     );
-    return res?.value ?? res ?? null;
+    return withDecryptedTokens(res?.value ?? res ?? null);
   }
   const current = memStore.get(id);
   if (!current) return null;
   const next = { ...current, ...update };
   memStore.set(id, next);
-  return next;
+  return withDecryptedTokens(next);
 }
 
 /** Merge `patch` into the session identified by a signed cookie value. */
@@ -126,19 +211,21 @@ export async function findSessionBySubscriptionId(subscriptionId) {
   if (!subscriptionId) return null;
   if (isDbConfigured()) {
     const col = await collection();
-    return col.findOne({
-      $or: [
-        { "subscription.id": subscriptionId },
-        { "pendingSubscription.id": subscriptionId },
-      ],
-    });
+    return withDecryptedTokens(
+      await col.findOne({
+        $or: [
+          { "subscription.id": subscriptionId },
+          { "pendingSubscription.id": subscriptionId },
+        ],
+      })
+    );
   }
   for (const record of memStore.values()) {
     if (
       record?.subscription?.id === subscriptionId ||
       record?.pendingSubscription?.id === subscriptionId
     ) {
-      return record;
+      return withDecryptedTokens(record);
     }
   }
   return null;

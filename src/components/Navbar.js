@@ -11,6 +11,8 @@ const links = [
   { label: "Features", href: "#features" },
   { label: "Pricing", href: "#pricing" },
   { label: "FAQ", href: "#faq" },
+  { label: "Tools", href: "/free-email-deliverability-tools" },
+  { label: "Blog", href: "/blog" },
 ];
 
 export default function Navbar() {
