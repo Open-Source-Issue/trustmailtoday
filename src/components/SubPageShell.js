@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
  */
 export default function SubPageShell({ children }) {
   return (
-    <div className="bg-dotted relative min-h-screen overflow-x-hidden">
+    <div className="bg-dotted relative min-h-screen overflow-x-clip">
       <div className="glow glow--teal glow--top-left" aria-hidden />
       <Navbar />
       <main className="relative z-10">{children}</main>

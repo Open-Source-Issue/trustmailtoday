@@ -18,7 +18,7 @@ export default async function Dashboard() {
   const session = await getSession(cookieStore.get(SESSION_COOKIE)?.value);
 
   return (
-    <main className="bg-dotted relative min-h-screen overflow-x-hidden">
+    <main className="bg-dotted relative min-h-screen overflow-x-clip">
       <div className="glow glow--teal glow--top-left" aria-hidden />
       <header className="relative z-10 border-b border-[#243044] bg-[#111827]/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5 sm:px-8">
