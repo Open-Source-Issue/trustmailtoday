@@ -1,4 +1,4 @@
-import LegalLayout, { LegalSection } from "@/components/LegalPageLayout";
+import LegalLayout, { LegalSection } from "@/components/LegalLayout";
 
 export const metadata = {
   title: "Terms of Service — Trustmailtoday",
