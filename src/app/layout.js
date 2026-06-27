@@ -49,6 +49,12 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${inter.variable} ${poppins.variable} scroll-smooth antialiased`}
     >
+      <head>
+        <meta
+          name="google-site-verification"
+          content="51SGj-5gixTGjieBWzYjDxad4NJqc2FcMH0-sWfw_bE"
+        />
+      </head>
       <body
         className="min-h-screen bg-darkbg text-[#FFFFFF] font-sans"
         suppressHydrationWarning
