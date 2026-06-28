@@ -7,6 +7,7 @@ import { getPlan } from "@/lib/plans";
 import WarmupPanel from "@/components/WarmupPanel";
 import InboxCheck from "@/components/InboxCheck";
 import AuthSetup from "@/components/AuthSetup";
+import ConnectSmtpForm from "@/components/ConnectSmtpForm";
 
 export const metadata = { title: "Dashboard — Trustmailtoday" };
 
@@ -53,8 +54,12 @@ export default async function Dashboard() {
 }
 
 function ConnectedView({ session }) {
+  const isSmtp = session.provider === "smtp";
   const scopes = session.tokens?.scope?.split(" ") ?? [];
   const plan = getPlan(session.plan || "free");
+  const connectionLabel = isSmtp
+    ? `connected via SMTP${session.smtp?.host ? ` (${session.smtp.host})` : ""}`
+    : "is connected via Google OAuth.";
   return (
     <>
       <div className="card-ring flex items-center gap-3 rounded-2xl bg-[#111827] p-6">
@@ -71,6 +76,11 @@ function ConnectedView({ session }) {
             >
               {plan.name} plan
             </span>
+            {isSmtp && session.imap == null && (
+              <span className="rounded-full bg-amber-400/10 px-3 py-0.5 text-xs font-semibold text-amber-300 ring-1 ring-amber-400/25">
+                Send-only
+              </span>
+            )}
           </div>
           <p className="text-sm text-[#CBD5E1]">
             {session.email ? (
@@ -78,8 +88,10 @@ function ConnectedView({ session }) {
                 <span className="font-medium text-[#cbd5e1]">
                   {session.email}
                 </span>{" "}
-                is connected via Google OAuth.
+                {connectionLabel}
               </>
+            ) : isSmtp ? (
+              "Your mailbox is connected via SMTP."
             ) : (
               "Your Google account is connected via OAuth."
             )}
@@ -107,22 +119,24 @@ function ConnectedView({ session }) {
         <AuthSetup />
       </div>
 
-      <details className="card-ring mt-6 rounded-2xl bg-[#111827] p-6">
-        <summary className="flex cursor-pointer items-center gap-2 font-semibold text-white">
-          <ShieldCheck className="h-5 w-5 text-[#22c55e]" /> Granted permissions
-        </summary>
-        <ul className="mt-3 space-y-1 text-sm text-[#CBD5E1]">
-          {scopes.length ? (
-            scopes.map((s) => (
-              <li key={s} className="truncate">
-                {s.replace("https://www.googleapis.com/auth/", "")}
-              </li>
-            ))
-          ) : (
-            <li>No scope information available.</li>
-          )}
-        </ul>
-      </details>
+      {!isSmtp && (
+        <details className="card-ring mt-6 rounded-2xl bg-[#111827] p-6">
+          <summary className="flex cursor-pointer items-center gap-2 font-semibold text-white">
+            <ShieldCheck className="h-5 w-5 text-[#22c55e]" /> Granted permissions
+          </summary>
+          <ul className="mt-3 space-y-1 text-sm text-[#CBD5E1]">
+            {scopes.length ? (
+              scopes.map((s) => (
+                <li key={s} className="truncate">
+                  {s.replace("https://www.googleapis.com/auth/", "")}
+                </li>
+              ))
+            ) : (
+              <li>No scope information available.</li>
+            )}
+          </ul>
+        </details>
+      )}
 
       <form action="/api/auth/logout" method="post" className="mt-8">
         <button
@@ -138,19 +152,29 @@ function ConnectedView({ session }) {
 
 function NotConnectedView() {
   return (
-    <div className="card-ring rounded-2xl bg-[#111827] p-10 text-center">
-      <Inbox className="mx-auto h-12 w-12 text-[#3a4a5a]" />
-      <h1 className="mt-4 text-xl font-bold text-white">No inbox connected</h1>
-      <p className="mx-auto mt-2 max-w-md text-sm text-[#CBD5E1]">
-        Connect your inbox with Google to start warming it up. We use OAuth —
-        we never see or store your password.
-      </p>
-      <Link
-        href="/#start"
-        className="mt-6 inline-block rounded-lg bg-brand-gradient px-6 py-3 text-sm font-semibold text-[#0F172A] transition-transform hover:-translate-y-0.5"
-      >
-        Connect your inbox
-      </Link>
+    <div className="space-y-6">
+      <div className="card-ring rounded-2xl bg-[#111827] p-10 text-center">
+        <Inbox className="mx-auto h-12 w-12 text-[#3a4a5a]" />
+        <h1 className="mt-4 text-xl font-bold text-white">No inbox connected</h1>
+        <p className="mx-auto mt-2 max-w-md text-sm text-[#CBD5E1]">
+          Connect your inbox to start warming it up. Use Google OAuth (no
+          password) or connect any other provider via SMTP below.
+        </p>
+        <Link
+          href="/#start"
+          className="mt-6 inline-block rounded-lg bg-brand-gradient px-6 py-3 text-sm font-semibold text-[#0F172A] transition-transform hover:-translate-y-0.5"
+        >
+          Connect with Google
+        </Link>
+      </div>
+
+      <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-[#64748B]">
+        <span className="h-px flex-1 bg-[#243044]" />
+        or connect another provider
+        <span className="h-px flex-1 bg-[#243044]" />
+      </div>
+
+      <ConnectSmtpForm />
     </div>
   );
 }
