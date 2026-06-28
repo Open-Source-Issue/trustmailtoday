@@ -26,6 +26,21 @@ async function collection() {
   return getCollection(COLLECTION);
 }
 
+/**
+ * Fail fast in production if no durable store is configured. The in-memory Map
+ * is fine for local demos, but on serverless (Vercel) it is per-instance and
+ * vanishes between invocations — sessions, warmup progress and plan state would
+ * silently disappear, and the background scheduler couldn't see any users.
+ */
+function assertPersistence() {
+  if (process.env.NODE_ENV === "production" && !isDbConfigured()) {
+    throw new Error(
+      "MONGODB_URI must be set in production. The in-memory session store is " +
+        "per-instance and not durable on serverless; configure MongoDB Atlas."
+    );
+  }
+}
+
 /* ----------------------------- cookie signing ---------------------------- */
 
 const DEV_SECRET = "dev-insecure-secret-change-me";
@@ -119,32 +134,57 @@ function decryptSecret(value) {
   }
 }
 
-const SECRET_TOKEN_FIELDS = ["refresh_token", "access_token"];
+/* ---- path-based secret handling ----
+ * Any field listed here is encrypted at rest with AES-256-GCM. Covers OAuth
+ * tokens (Google) and SMTP/IMAP passwords (generic providers). Adding a new
+ * provider's secret is a one-line change. Reads transparently pass through
+ * legacy plaintext values (ENC_PREFIX gate) so existing sessions keep working.
+ */
+const SECRET_PATHS = [
+  ["tokens", "refresh_token"],
+  ["tokens", "access_token"],
+  ["smtp", "pass"],
+  ["imap", "pass"],
+];
 
-function mapTokenFields(tokens, fn) {
-  if (!tokens || typeof tokens !== "object") return tokens;
-  const out = { ...tokens };
-  for (const field of SECRET_TOKEN_FIELDS) {
-    if (typeof out[field] === "string" && out[field]) out[field] = fn(out[field]);
+function getIn(obj, path) {
+  return path.reduce((o, k) => (o == null ? o : o[k]), obj);
+}
+
+/** Immutably set a nested value, cloning only the objects along the path. */
+function setIn(obj, path, value) {
+  const [head, ...rest] = path;
+  const base =
+    obj && typeof obj === "object" ? obj : {};
+  const copy = Array.isArray(base) ? [...base] : { ...base };
+  copy[head] = rest.length ? setIn(base[head], rest, value) : value;
+  return copy;
+}
+
+function transformSecrets(doc, fn) {
+  if (!doc || typeof doc !== "object") return doc;
+  let out = doc;
+  for (const path of SECRET_PATHS) {
+    const val = getIn(out, path);
+    if (typeof val === "string" && val) out = setIn(out, path, fn(val));
   }
   return out;
 }
 
-const encryptTokens = (tokens) => mapTokenFields(tokens, encryptSecret);
-const decryptTokens = (tokens) => mapTokenFields(tokens, decryptSecret);
+const encryptDoc = (doc) => transformSecrets(doc, encryptSecret);
+const decryptDoc = (doc) => transformSecrets(doc, decryptSecret);
 
-/** Return a shallow copy of a session doc with its token secrets decrypted. */
-function withDecryptedTokens(doc) {
-  if (!doc || !doc.tokens) return doc;
-  return { ...doc, tokens: decryptTokens(doc.tokens) };
+/** Return a copy of a session doc with all known secret fields decrypted. */
+function withDecrypted(doc) {
+  return doc ? decryptDoc(doc) : doc;
 }
 
 
 /** Create a session record and return { id, cookieValue }. */
 export async function createSession(data) {
+  assertPersistence();
   const id = crypto.randomBytes(18).toString("base64url");
-  const stored = { ...data };
-  if (stored.tokens) stored.tokens = encryptTokens(stored.tokens);
+  const stored = encryptDoc({ ...data });
   const doc = { _id: id, ...stored, createdAt: Date.now() };
   if (isDbConfigured()) {
     const col = await collection();
@@ -160,16 +200,15 @@ export async function getSession(signedCookieValue) {
   if (!id) return null;
   if (isDbConfigured()) {
     const col = await collection();
-    return withDecryptedTokens(await col.findOne({ _id: id }));
+    return withDecrypted(await col.findOne({ _id: id }));
   }
-  return withDecryptedTokens(memStore.get(id) || null);
+  return withDecrypted(memStore.get(id) || null);
 }
 
 /** Merge `patch` into a session by its raw (unsigned) id. */
 export async function updateSessionById(id, patch) {
   if (!id) return null;
-  const update = { ...patch, updatedAt: Date.now() };
-  if (update.tokens) update.tokens = encryptTokens(update.tokens);
+  const update = encryptDoc({ ...patch, updatedAt: Date.now() });
   if (isDbConfigured()) {
     const col = await collection();
     const res = await col.findOneAndUpdate(
@@ -177,13 +216,13 @@ export async function updateSessionById(id, patch) {
       { $set: update },
       { returnDocument: "after" }
     );
-    return withDecryptedTokens(res?.value ?? res ?? null);
+    return withDecrypted(res?.value ?? res ?? null);
   }
   const current = memStore.get(id);
   if (!current) return null;
   const next = { ...current, ...update };
   memStore.set(id, next);
-  return withDecryptedTokens(next);
+  return withDecrypted(next);
 }
 
 /** Merge `patch` into the session identified by a signed cookie value. */
@@ -211,7 +250,7 @@ export async function findSessionBySubscriptionId(subscriptionId) {
   if (!subscriptionId) return null;
   if (isDbConfigured()) {
     const col = await collection();
-    return withDecryptedTokens(
+    return withDecrypted(
       await col.findOne({
         $or: [
           { "subscription.id": subscriptionId },
@@ -225,10 +264,28 @@ export async function findSessionBySubscriptionId(subscriptionId) {
       record?.subscription?.id === subscriptionId ||
       record?.pendingSubscription?.id === subscriptionId
     ) {
-      return withDecryptedTokens(record);
+      return withDecrypted(record);
     }
   }
   return null;
+}
+
+/**
+ * List every session that has an active warmup (startedAt set). Used by the
+ * background scheduler, which has no cookie to identify users. Secrets are
+ * returned decrypted, ready for the mailer layer.
+ */
+export async function listStartedWarmupSessions() {
+  if (isDbConfigured()) {
+    const col = await collection();
+    const docs = await col
+      .find({ "warmup.startedAt": { $exists: true, $ne: null } })
+      .toArray();
+    return docs.map(withDecrypted);
+  }
+  return [...memStore.values()]
+    .filter((d) => d?.warmup?.startedAt)
+    .map(withDecrypted);
 }
 
 /* --------------------------------- cookie -------------------------------- */
