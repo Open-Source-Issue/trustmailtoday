@@ -10,7 +10,7 @@ const plans = [
   {
     key: "free",
     name: "Free",
-    price: "₹0",
+    price: "$0",
     period: "forever",
     tagline: "Try it out",
     features: [
@@ -25,7 +25,7 @@ const plans = [
   {
     key: "pro",
     name: "Pro",
-    price: "₹200",
+    price: "$19",
     period: "/month",
     tagline: "For growing senders",
     features: [
@@ -35,13 +35,13 @@ const plans = [
       "Auto warmup ramp-up",
       "Email support",
     ],
-    cta: "Get Pro",
+    cta: "Start Pro",
     highlight: true,
   },
   {
     key: "premium",
     name: "Premium",
-    price: "₹500",
+    price: "$49",
     period: "/month",
     tagline: "For serious campaigns",
     features: [
@@ -51,13 +51,13 @@ const plans = [
       "SPF/DKIM/DMARC monitoring",
       "Priority support",
     ],
-    cta: "Get Premium",
+    cta: "Start Premium",
     highlight: false,
   },
   {
     key: "enterprise",
     name: "Enterprise",
-    price: "₹2000",
+    price: "$149",
     period: "/month",
     tagline: "For teams & agencies",
     features: [
@@ -67,7 +67,7 @@ const plans = [
       "API access",
       "Dedicated manager",
     ],
-    cta: "Get Enterprise",
+    cta: "Start Enterprise",
     highlight: false,
   },
 ];
@@ -92,13 +92,13 @@ export default function Pricing() {
           text: "Connect your inbox first, then subscribe.",
         });
         setTimeout(() => (window.location.href = "/#start"), 1200);
-      } else if (result.status === "success") {
-        setNotice({ type: "ok", text: `You're on ${plan.name}! Redirecting…` });
-        setTimeout(() => (window.location.href = "/dashboard"), 1000);
+      } else if (result.status === "redirecting") {
+        setNotice({ type: "info", text: "Redirecting to secure checkout…" });
+        // Browser is navigating to Stripe; keep the spinner up.
+        return;
       } else if (result.status === "error") {
         setNotice({ type: "err", text: result.message });
       }
-      // "cancelled" -> silently do nothing
     } finally {
       setPending(null);
     }
@@ -121,8 +121,12 @@ export default function Pricing() {
             Simple, <span className="text-green-accent">honest pricing</span>
           </h2>
           <p className="mt-4 text-[#CBD5E1]">
-            Startup-friendly pricing built for Indian senders. Start free, no
-            card required — upgrade or cancel anytime.
+            Simple USD pricing for senders everywhere. Start free, no card
+            required. Paid plans include a 7-day free trial — cancel anytime.
+          </p>
+          <p className="mt-2 text-xs text-[#94A3B8]">
+            Prices in USD. Paying from India? Choose UPI at checkout — it&apos;s
+            billed in the equivalent INR amount.
           </p>
           {notice && (
             <p

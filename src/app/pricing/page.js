@@ -6,7 +6,7 @@ import CTASection from "@/components/CTASection";
 export const metadata = {
   title: "Pricing — Trustmailtoday",
   description:
-    "Simple, honest email warmup pricing. Start free with 10 warmup emails/day, or go unlimited from ₹200/month. Upgrade or cancel anytime — no card required to start.",
+    "Simple, honest email warmup pricing. Start free with 10 warmup emails/day, or go unlimited from $19/month with a 7-day free trial. Cards worldwide; UPI supported for India (billed in INR). Cancel anytime.",
   alternates: { canonical: "/pricing" },
 };
 
