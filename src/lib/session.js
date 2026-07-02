@@ -243,27 +243,40 @@ export async function destroySession(signedCookieValue) {
 }
 
 /**
- * Find a session by the Razorpay subscription id it owns (active or pending).
- * Used by the billing webhook, which has no cookie to identify the user.
+ * Find a session by the Stripe subscription id it owns. Used by the billing
+ * webhook as a fallback when the customer id isn't matched (the subscription
+ * id is only known after checkout completes, so this matches post-activation).
  */
 export async function findSessionBySubscriptionId(subscriptionId) {
   if (!subscriptionId) return null;
   if (isDbConfigured()) {
     const col = await collection();
     return withDecrypted(
-      await col.findOne({
-        $or: [
-          { "subscription.id": subscriptionId },
-          { "pendingSubscription.id": subscriptionId },
-        ],
-      })
+      await col.findOne({ "subscription.id": subscriptionId })
     );
   }
   for (const record of memStore.values()) {
-    if (
-      record?.subscription?.id === subscriptionId ||
-      record?.pendingSubscription?.id === subscriptionId
-    ) {
+    if (record?.subscription?.id === subscriptionId) {
+      return withDecrypted(record);
+    }
+  }
+  return null;
+}
+
+/**
+ * Find a session by its Stripe Customer id. Stripe webhook events reliably
+ * carry the customer id (some events don't carry the subscription), and the
+ * customer is what the Billing Portal is opened against, so this is the
+ * primary key the webhook uses to locate a user.
+ */
+export async function findSessionByStripeCustomerId(customerId) {
+  if (!customerId) return null;
+  if (isDbConfigured()) {
+    const col = await collection();
+    return withDecrypted(await col.findOne({ stripeCustomerId: customerId }));
+  }
+  for (const record of memStore.values()) {
+    if (record?.stripeCustomerId === customerId) {
       return withDecrypted(record);
     }
   }

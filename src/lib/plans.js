@@ -4,15 +4,24 @@
  * The daily cap is the product's core gate: Free is limited to 10 warmup
  * emails/day; paid tiers lift that limit (bounded by the warmup ramp, which
  * never exceeds DEFAULT_RAMP.max for safety regardless of plan).
+ *
+ * Pricing model: monthly USD subscriptions billed via Stripe. `price` is the
+ * headline USD amount shown to every visitor. Indian users may pay with UPI,
+ * which Stripe presents/settles in the INR equivalent (UPI is INR-only). All
+ * paid prices are kept under the ₹15,000 UPI AutoPay cap so UPI works on
+ * every tier. The authoritative amount lives on the Stripe Price object; the
+ * value here is for display and must match STRIPE_PRICE_* in Stripe.
  */
 
 export const PLAN_KEYS = ["free", "pro", "premium", "enterprise"];
+
+export const CURRENCY = "USD";
 
 export const PLANS = {
   free: {
     key: "free",
     name: "Free",
-    price: 0,
+    price: 0, // USD/month
     dailyCap: 10, // emails/day
     inboxes: 1,
     features: { reputation: true, inboxCheck: false, api: false, team: false },
@@ -20,7 +29,7 @@ export const PLANS = {
   pro: {
     key: "pro",
     name: "Pro",
-    price: 200,
+    price: 19, // USD/month
     dailyCap: Infinity, // bounded by the warmup ramp
     inboxes: 1,
     features: { reputation: true, inboxCheck: false, api: false, team: false },
@@ -28,7 +37,7 @@ export const PLANS = {
   premium: {
     key: "premium",
     name: "Premium",
-    price: 500,
+    price: 49, // USD/month
     dailyCap: Infinity,
     inboxes: 3,
     features: { reputation: true, inboxCheck: true, api: false, team: false },
@@ -36,7 +45,7 @@ export const PLANS = {
   enterprise: {
     key: "enterprise",
     name: "Enterprise",
-    price: 2000,
+    price: 149, // USD/month (kept under the ~$170 UPI AutoPay ceiling)
     dailyCap: Infinity,
     inboxes: Infinity,
     features: { reputation: true, inboxCheck: true, api: true, team: true },

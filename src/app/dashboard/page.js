@@ -7,6 +7,7 @@ import { getPlan } from "@/lib/plans";
 import WarmupPanel from "@/components/WarmupPanel";
 import InboxCheck from "@/components/InboxCheck";
 import AuthSetup from "@/components/AuthSetup";
+import ManageBillingButton from "@/components/ManageBillingButton";
 
 export const metadata = { title: "Dashboard — Trustmailtoday" };
 
@@ -106,6 +107,46 @@ function ConnectedView({ session }) {
       <div className="mt-6">
         <AuthSetup />
       </div>
+
+      {(plan.key !== "free" || session.stripeCustomerId) && (
+        <div className="card-ring mt-6 rounded-2xl bg-[#111827] p-6">
+          <h2 className="text-lg font-bold text-white">Billing</h2>
+          <p className="mt-1 text-sm text-[#CBD5E1]">
+            {(() => {
+              const sub = session.subscription || {};
+              const when = sub.currentPeriodEnd
+                ? new Date(sub.currentPeriodEnd).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                : null;
+              if (sub.status === "trialing") {
+                return when
+                  ? `You're on a free trial of ${plan.name}. First charge on ${when}.`
+                  : `You're on a free trial of ${plan.name}.`;
+              }
+              if (sub.cancelAtPeriodEnd) {
+                return when
+                  ? `${plan.name} is set to cancel on ${when}. You keep access until then.`
+                  : `${plan.name} is set to cancel at the end of the period.`;
+              }
+              if (sub.status === "past_due") {
+                return "Your last payment failed. Update your card to keep your plan active.";
+              }
+              if (plan.key !== "free") {
+                return when
+                  ? `${plan.name} plan — renews on ${when}.`
+                  : `${plan.name} plan — billed monthly.`;
+              }
+              return "Manage your payment method, invoices, and subscription.";
+            })()}
+          </p>
+          <div className="mt-4">
+            <ManageBillingButton />
+          </div>
+        </div>
+      )}
 
       <details className="card-ring mt-6 rounded-2xl bg-[#111827] p-6">
         <summary className="flex cursor-pointer items-center gap-2 font-semibold text-white">
